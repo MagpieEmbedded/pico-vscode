@@ -44,6 +44,7 @@ import {
   GetTargetCommand,
   GetChipUppercaseCommand,
   GetPicotoolPathCommand,
+  GetOpenOCDRootCommand,
 } from "./commands/getPaths.mjs";
 import {
   downloadAndInstallCmake,
@@ -118,6 +119,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     new GetChipUppercaseCommand(),
     new GetTargetCommand(),
     new GetPicotoolPathCommand(),
+    new GetOpenOCDRootCommand(),
     new CompileProjectCommand(),
     new RunProjectCommand(),
     new FlashProjectSWDCommand(),
@@ -181,10 +183,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
   // check if there is a workspace folder
   if (workspaceFolder === undefined) {
     // finish activation
-    Logger.warn(
-      LoggerSource.extension,
-      "No workspace folder found."
-    );
+    Logger.warn(LoggerSource.extension, "No workspace folder found.");
     await commands.executeCommand(
       "setContext",
       ContextKeys.isPicoProject,
@@ -796,7 +795,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     await configureCmakeNinja(workspaceFolder.uri);
 
     const ws = workspaceFolder.uri.fsPath;
-    const cMakeCachePath = join(ws, "build","CMakeCache.txt");
+    const cMakeCachePath = join(ws, "build", "CMakeCache.txt");
     const newBuildType = cmakeGetPicoVar(cMakeCachePath, "CMAKE_BUILD_TYPE");
     ui.updateBuildType(newBuildType ?? "unknown");
 

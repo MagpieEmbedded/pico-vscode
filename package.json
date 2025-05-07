@@ -148,6 +148,12 @@
         "enablement": "false"
       },
       {
+        "command": "raspberry-pi-pico.getOpenOCDRoot",
+        "title": "Get OpenOCD root",
+        "category": "Raspberry Pi Pico",
+        "enablement": "false"
+      },
+      {
         "command": "raspberry-pi-pico.compileProject",
         "title": "Compile Pico Project",
         "category": "Raspberry Pi Pico",
