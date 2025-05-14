@@ -45,6 +45,7 @@ import {
   GetChipUppercaseCommand,
   GetPicotoolPathCommand,
   GetOpenOCDRootCommand,
+  SetupVenvCommand,
 } from "./commands/getPaths.mjs";
 import {
   downloadAndInstallCmake,
@@ -120,6 +121,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     new GetTargetCommand(),
     new GetPicotoolPathCommand(),
     new GetOpenOCDRootCommand(),
+    new SetupVenvCommand(),
     new CompileProjectCommand(),
     new RunProjectCommand(),
     new FlashProjectSWDCommand(),

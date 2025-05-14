@@ -230,6 +230,11 @@
         "title": "Clean CMake",
         "category": "Raspberry Pi Pico",
         "enablement": "raspberry-pi-pico.isPicoProject && !raspberry-pi-pico.isRustProject"
+      },
+      {
+        "command": "raspberry-pi-pico.setupVenv",
+        "title": "Setup Venv",
+        "category": "Raspberry Pi Pico"
       }
     ],
     "configuration": {
