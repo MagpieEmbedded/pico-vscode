@@ -13,6 +13,7 @@ import { NewMicroPythonProjectPanel } from "../webview/newMicroPythonProjectPane
 export enum ProjectLang {
   cCpp = 1,
   micropython = 2,
+  zephyr = 5,
 }
 
 export default class NewProjectCommand extends CommandWithArgs {
