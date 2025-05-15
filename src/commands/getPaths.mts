@@ -386,21 +386,23 @@ export class GetOpenOCDRootCommand extends CommandWithResult<
   }
 }
 
-export class SetupVenvCommand extends CommandWithResult<string | undefined> {
+export class SetupZephyrCommand extends CommandWithResult<string | undefined> {
   private running: boolean = false;
 
-  public static readonly id = "setupVenv";
+  public static readonly id = "setupZephyr";
 
   constructor() {
-    super(SetupVenvCommand.id);
+    super(SetupZephyrCommand.id);
   }
 
-  private readonly _logger: Logger = new Logger("SetupVenv");
+  private readonly _logger: Logger = new Logger("SetupZephyr");
 
-  private _runSetupVenv(
+  private _runCommand(
     command: string,
     options: ExecOptions
   ): Promise<number | null> {
+    this._logger.debug(`Running: ${command}`);
+
     return new Promise<number | null>(resolve => {
       const generatorProcess = exec(
         command,
@@ -460,7 +462,7 @@ export class SetupVenvCommand extends CommandWithResult<string | undefined> {
     workspace.fs.createDirectory(Uri.file(zephyrWorkspaceDirectory));
 
     this._logger.info("Setting up virtual environment for Zephyr");
-    let result = await this._runSetupVenv(command, {
+    let result = await this._runCommand(command, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
     });
@@ -482,7 +484,7 @@ export class SetupVenvCommand extends CommandWithResult<string | undefined> {
     ].join(" ");
 
     this._logger.info("Installing Python dependencies for Zephyr");
-    result = await this._runSetupVenv(command2, {
+    result = await this._runCommand(command2, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
     });
@@ -529,7 +531,7 @@ manifest:
     ].join(" ");
 
     this._logger.info("Initialising West workspace");
-    result = await this._runSetupVenv(westInitCommand, {
+    result = await this._runCommand(westInitCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
     });
@@ -544,7 +546,7 @@ manifest:
     ].join(" ");
 
     this._logger.info("Updating West workspace");
-    result = await this._runSetupVenv(westUpdateCommand, {
+    result = await this._runCommand(westUpdateCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
     });
@@ -559,7 +561,7 @@ manifest:
     ].join(" ");
 
     this._logger.info("Installing West Python packages");
-    result = await this._runSetupVenv(westPipPackagesCommand, {
+    result = await this._runCommand(westPipPackagesCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
     });
@@ -574,7 +576,7 @@ manifest:
     ].join(" ");
 
     this._logger.info("Fetching binary blobs for Zephyr");
-    result = await this._runSetupVenv(westBlobsFetchCommand, {
+    result = await this._runCommand(westBlobsFetchCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
     });
@@ -590,7 +592,7 @@ manifest:
     ].join(" ");
 
     this._logger.info("Installing Zephyr SDK");
-    result = await this._runSetupVenv(westInstallSDKCommand, {
+    result = await this._runCommand(westInstallSDKCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
     });

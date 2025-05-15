@@ -45,7 +45,7 @@ import {
   GetChipUppercaseCommand,
   GetPicotoolPathCommand,
   GetOpenOCDRootCommand,
-  SetupVenvCommand,
+  SetupZephyrCommand,
 } from "./commands/getPaths.mjs";
 import {
   downloadAndInstallCmake,
@@ -121,7 +121,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     new GetTargetCommand(),
     new GetPicotoolPathCommand(),
     new GetOpenOCDRootCommand(),
-    new SetupVenvCommand(),
+    new SetupZephyrCommand(),
     new CompileProjectCommand(),
     new RunProjectCommand(),
     new FlashProjectSWDCommand(),
