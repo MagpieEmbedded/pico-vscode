@@ -1,5 +1,5 @@
 import { CommandWithResult } from "./command.mjs";
-import { commands, window, workspace } from "vscode";
+import { commands, window, workspace, Uri } from "vscode";
 import { type ExecOptions, exec } from "child_process";
 import { join as joinPosix } from "path/posix";
 import { homedir } from "os";
@@ -17,7 +17,6 @@ import {
   buildToolchainPath,
   downloadAndInstallOpenOCD,
   downloadAndInstallPicotool,
-  buildSDKPath,
 } from "../utils/download.mjs";
 import Settings, { SettingsKey, HOME_VAR } from "../settings.mjs";
 import which from "which";
@@ -452,12 +451,32 @@ export class SetupVenvCommand extends CommandWithResult<string | undefined> {
     const homeDirectory: string = homedir();
     const sdkDir: string = joinPosix(homeDirectory, ".pico-sdk");
 
-    const result = await this._runSetupVenv(command, {
+    let result = await this._runSetupVenv(command, {
       cwd: sdkDir,
       windowsHide: true,
     });
 
     this._logger.info(`${result}`);
+
+    const venvPythonExe: string = joinPosix(
+      homeDirectory,
+      ".pico-sdk",
+      "venv",
+      "Scripts",
+      "python.exe"
+    );
+
+    const command2: string = [
+      `${
+        process.env.ComSpec === "powershell.exe" ? "&" : ""
+      }"${venvPythonExe}"`,
+      "-m pip install west pyelftools",
+    ].join(" ");
+
+    result = await this._runSetupVenv(command2, {
+      cwd: sdkDir,
+      windowsHide: true,
+    });
 
     this.running = false;
 
