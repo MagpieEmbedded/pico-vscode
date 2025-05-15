@@ -451,6 +451,7 @@ export class SetupVenvCommand extends CommandWithResult<string | undefined> {
     const homeDirectory: string = homedir();
     const sdkDir: string = joinPosix(homeDirectory, ".pico-sdk");
 
+    this._logger.info("Setting up virtual environment for Zephyr");
     let result = await this._runSetupVenv(command, {
       cwd: sdkDir,
       windowsHide: true,
@@ -473,6 +474,7 @@ export class SetupVenvCommand extends CommandWithResult<string | undefined> {
       "-m pip install west pyelftools",
     ].join(" ");
 
+    this._logger.info("Installing Python dependencies for Zephyr");
     result = await this._runSetupVenv(command2, {
       cwd: sdkDir,
       windowsHide: true,
@@ -526,6 +528,7 @@ manifest:
       "-m west init -l manifest",
     ].join(" ");
 
+    this._logger.info("Initialising West workspace");
     result = await this._runSetupVenv(westInitCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
@@ -540,6 +543,7 @@ manifest:
       "-m west update",
     ].join(" ");
 
+    this._logger.info("Updating West workspace");
     result = await this._runSetupVenv(westUpdateCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
@@ -554,6 +558,7 @@ manifest:
       "-m west packages pip --install",
     ].join(" ");
 
+    this._logger.info("Installing West Python packages");
     result = await this._runSetupVenv(westPipPackagesCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
@@ -568,6 +573,7 @@ manifest:
       "-m west blobs fetch hal_infineon",
     ].join(" ");
 
+    this._logger.info("Fetching binary blobs for Zephyr");
     result = await this._runSetupVenv(westBlobsFetchCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
@@ -583,6 +589,7 @@ manifest:
       `-b ${zephyrWorkspaceDirectory}`,
     ].join(" ");
 
+    this._logger.info("Installing Zephyr SDK");
     result = await this._runSetupVenv(westInstallSDKCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
