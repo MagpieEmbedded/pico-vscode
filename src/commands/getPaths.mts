@@ -15,6 +15,7 @@ import {
   buildOpenOCDPath,
   buildPicotoolPath,
   buildToolchainPath,
+  buildWestPath,
   downloadAndInstallOpenOCD,
   downloadAndInstallPicotool,
 } from "../utils/download.mjs";
@@ -383,6 +384,35 @@ export class GetOpenOCDRootCommand extends CommandWithResult<
     this.running = false;
 
     return buildOpenOCDPath(openOCDVersion);
+  }
+}
+
+export class GetWestPathCommand extends CommandWithResult<string | undefined> {
+  private running: boolean = false;
+
+  public static readonly id = "getWestPath";
+
+  constructor() {
+    super(GetWestPathCommand.id);
+  }
+
+  execute(): string | undefined {
+    if (this.running) {
+      return undefined;
+    }
+    this.running = true;
+
+    const result = buildWestPath();
+
+    if (result === null || !result) {
+      this.running = false;
+
+      return undefined;
+    }
+
+    this.running = false;
+
+    return result;
   }
 }
 

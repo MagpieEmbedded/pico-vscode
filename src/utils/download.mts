@@ -186,6 +186,17 @@ export function buildPython3Path(version: string): string {
   );
 }
 
+export function buildWestPath(): string {
+  return joinPosix(
+    homeDirectory.replaceAll("\\", "/"),
+    ".pico-sdk",
+    "zephyr_workspace",
+    "venv",
+    process.platform === "win32" ? "Scripts" : "bin",
+    process.platform === "win32" ? "west.exe" : "west"
+  );
+}
+
 /**
  * Downloads and installs an archive from a URL.
  *

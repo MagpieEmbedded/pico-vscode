@@ -46,6 +46,7 @@ import {
   GetPicotoolPathCommand,
   GetOpenOCDRootCommand,
   SetupZephyrCommand,
+  GetWestPathCommand,
 } from "./commands/getPaths.mjs";
 import {
   downloadAndInstallCmake,
@@ -121,6 +122,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     new GetTargetCommand(),
     new GetPicotoolPathCommand(),
     new GetOpenOCDRootCommand(),
+    new GetWestPathCommand(),
     new SetupZephyrCommand(),
     new CompileProjectCommand(),
     new RunProjectCommand(),
