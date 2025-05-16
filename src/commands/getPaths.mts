@@ -16,6 +16,7 @@ import {
   buildPicotoolPath,
   buildToolchainPath,
   buildWestPath,
+  buildZephyrWorkspacePath,
   downloadAndInstallOpenOCD,
   downloadAndInstallPicotool,
 } from "../utils/download.mjs";
@@ -403,6 +404,37 @@ export class GetWestPathCommand extends CommandWithResult<string | undefined> {
     this.running = true;
 
     const result = buildWestPath();
+
+    if (result === null || !result) {
+      this.running = false;
+
+      return undefined;
+    }
+
+    this.running = false;
+
+    return result;
+  }
+}
+
+export class GetZephyrWorkspacePathCommand extends CommandWithResult<
+  string | undefined
+> {
+  private running: boolean = false;
+
+  public static readonly id = "getZephyrWorkspacePath";
+
+  constructor() {
+    super(GetZephyrWorkspacePathCommand.id);
+  }
+
+  execute(): string | undefined {
+    if (this.running) {
+      return undefined;
+    }
+    this.running = true;
+
+    const result = buildZephyrWorkspacePath();
 
     if (result === null || !result) {
       this.running = false;
