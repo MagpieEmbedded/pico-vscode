@@ -4,6 +4,7 @@ import { window, type Uri } from "vscode";
 import { NewProjectPanel } from "../webview/newProjectPanel.mjs";
 // eslint-disable-next-line max-len
 import { NewMicroPythonProjectPanel } from "../webview/newMicroPythonProjectPanel.mjs";
+import { NewZephyrProjectPanel } from "../webview/newZephyrProjectPanel.mjs";
 
 /**
  * Enum for the language of the project.
@@ -21,6 +22,7 @@ export default class NewProjectCommand extends CommandWithArgs {
   private readonly _extensionUri: Uri;
   private static readonly micropythonOption = "MicroPython";
   private static readonly cCppOption = "C/C++";
+  private static readonly zephyrOption = "Zephyr";
 
   public static readonly id = "newProject";
 
@@ -35,6 +37,8 @@ export default class NewProjectCommand extends CommandWithArgs {
       ? NewProjectCommand.cCppOption
       : preSelectedType === ProjectLang.micropython
       ? NewProjectCommand.micropythonOption
+      : preSelectedType === ProjectLang.zephyr
+      ? NewProjectCommand.zephyrOption
       : undefined;
   }
 
@@ -43,7 +47,11 @@ export default class NewProjectCommand extends CommandWithArgs {
     const lang =
       this.preSelectedTypeToStr(preSelectedType) ??
       (await window.showQuickPick(
-        [NewProjectCommand.cCppOption, NewProjectCommand.micropythonOption],
+        [
+          NewProjectCommand.cCppOption,
+          NewProjectCommand.micropythonOption,
+          NewProjectCommand.zephyrOption,
+        ],
         {
           placeHolder: "Select which language to use for your new project",
           canPickMany: false,
@@ -59,6 +67,9 @@ export default class NewProjectCommand extends CommandWithArgs {
     if (lang === NewProjectCommand.micropythonOption) {
       // create a new project with MicroPython
       NewMicroPythonProjectPanel.createOrShow(this._extensionUri);
+    } else if (lang === NewProjectCommand.zephyrOption) {
+      // create a new project with MicroPython
+      NewZephyrProjectPanel.createOrShow(this._extensionUri);
     } else {
       // show webview where the process of creating a new project is continued
       NewProjectPanel.createOrShow(this._extensionUri);
