@@ -81,6 +81,7 @@ import ImportProjectCommand from "./commands/importProject.mjs";
 import { homedir } from "os";
 import NewExampleProjectCommand from "./commands/newExampleProject.mjs";
 import SwitchBoardCommand from "./commands/switchBoard.mjs";
+import SwitchBoardZephyrCommand from "./commands/switchBoardZephyr.mjs";
 import UninstallPicoSDKCommand from "./commands/uninstallPicoSDK.mjs";
 import UpdateOpenOCDCommand from "./commands/updateOpenOCD.mjs";
 import FlashProjectSWDCommand from "./commands/flashProjectSwd.mjs";
@@ -113,6 +114,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     new NewProjectCommand(context.extensionUri),
     new SwitchSDKCommand(ui, context.extensionUri),
     new SwitchBoardCommand(ui, context.extensionUri),
+    new SwitchBoardZephyrCommand(),
     new LaunchTargetPathCommand(),
     new GetPythonPathCommand(),
     new GetEnvPathCommand(),
