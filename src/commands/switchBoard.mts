@@ -1,11 +1,16 @@
-import { Command } from "./command.mjs";
+import { extensionName, Command } from "./command.mjs";
 import Logger from "../logger.mjs";
 import {
-  commands, ProgressLocation, window, workspace, type Uri
+  commands,
+  ProgressLocation,
+  window,
+  workspace,
+  type Uri,
 } from "vscode";
 import { existsSync, readdirSync, readFileSync } from "fs";
 import {
-  buildSDKPath, downloadAndInstallToolchain
+  buildSDKPath,
+  downloadAndInstallToolchain,
 } from "../utils/download.mjs";
 import {
   cmakeGetSelectedToolchainAndSDKVersions,
@@ -21,6 +26,7 @@ import type UI from "../ui.mjs";
 import { updateVSCodeStaticConfigs } from "../utils/vscodeConfigUtil.mjs";
 import { getSupportedToolchains } from "../utils/toolchainUtil.mjs";
 import VersionBundlesLoader from "../utils/versionBundles.mjs";
+import SwitchZephyrBoardCommand from "./switchBoardZephyr.mjs";
 
 export default class SwitchBoardCommand extends Command {
   private _versionBundlesLoader: VersionBundlesLoader;
@@ -32,8 +38,9 @@ export default class SwitchBoardCommand extends Command {
     this._versionBundlesLoader = new VersionBundlesLoader(extensionUri);
   }
 
-  public static async askBoard(sdkVersion: string):
-      Promise<[string, boolean] | undefined> {
+  public static async askBoard(
+    sdkVersion: string
+  ): Promise<[string, boolean] | undefined> {
     const quickPickItems: string[] = ["pico", "pico_w"];
     const workspaceFolder = workspace.workspaceFolders?.[0];
 
@@ -47,64 +54,64 @@ export default class SwitchBoardCommand extends Command {
     const sdkPath = buildSDKPath(sdkVersion);
     const boardHeaderDirList = [];
 
-    if(workspaceFolder !== undefined) {
+    if (workspaceFolder !== undefined) {
       const ws = workspaceFolder.uri.fsPath;
-      const cMakeCachePath = join(ws, "build","CMakeCache.txt");
+      const cMakeCachePath = join(ws, "build", "CMakeCache.txt");
 
       let picoBoardHeaderDirs = cmakeGetPicoVar(
         cMakeCachePath,
-        "PICO_BOARD_HEADER_DIRS");
+        "PICO_BOARD_HEADER_DIRS"
+      );
 
-      if(picoBoardHeaderDirs){
-        if(picoBoardHeaderDirs.startsWith("'")){
-          const substrLen = picoBoardHeaderDirs.length-1;
-          picoBoardHeaderDirs = picoBoardHeaderDirs.substring(1,substrLen);
+      if (picoBoardHeaderDirs) {
+        if (picoBoardHeaderDirs.startsWith("'")) {
+          const substrLen = picoBoardHeaderDirs.length - 1;
+          picoBoardHeaderDirs = picoBoardHeaderDirs.substring(1, substrLen);
         }
 
         const picoBoardHeaderDirList = picoBoardHeaderDirs.split(";");
-        picoBoardHeaderDirList.forEach(
-          item => {
-            let boardPath = resolve(item);
-            const normalized = normalize(item);
+        picoBoardHeaderDirList.forEach(item => {
+          let boardPath = resolve(item);
+          const normalized = normalize(item);
 
-            //If path is not absolute, join workspace path
-            if(boardPath !== normalized){
-              boardPath = join(ws,normalized);
-            }
-
-            if(existsSync(boardPath)){
-              boardHeaderDirList.push(boardPath);
-            }
+          //If path is not absolute, join workspace path
+          if (boardPath !== normalized) {
+            boardPath = join(ws, normalized);
           }
-        );
+
+          if (existsSync(boardPath)) {
+            boardHeaderDirList.push(boardPath);
+          }
+        });
       }
     }
 
-    const systemBoardHeaderDir = 
-      join(sdkPath,"src", "boards", "include","boards");
-
-      boardHeaderDirList.push(systemBoardHeaderDir);
-
-    interface IBoardFile{
-      [key: string]: string;
-    };
-
-    const boardFiles:IBoardFile = {};
-
-    boardHeaderDirList.forEach(
-      path =>{
-        readdirSync(path).forEach(
-          file => {
-            const fullFilename = join(path, file);
-            if(fullFilename.endsWith(".h")) {
-              const boardName = file.split(".")[0];
-              boardFiles[boardName] = fullFilename;
-              quickPickItems.push(boardName);
-            }
-          }
-        )
-      }
+    const systemBoardHeaderDir = join(
+      sdkPath,
+      "src",
+      "boards",
+      "include",
+      "boards"
     );
+
+    boardHeaderDirList.push(systemBoardHeaderDir);
+
+    interface IBoardFile {
+      [key: string]: string;
+    }
+
+    const boardFiles: IBoardFile = {};
+
+    boardHeaderDirList.forEach(path => {
+      readdirSync(path).forEach(file => {
+        const fullFilename = join(path, file);
+        if (fullFilename.endsWith(".h")) {
+          const boardName = file.split(".")[0];
+          boardFiles[boardName] = fullFilename;
+          quickPickItems.push(boardName);
+        }
+      });
+    });
 
     // show quick pick for board type
     const board = await window.showQuickPick(quickPickItems, {
@@ -112,15 +119,13 @@ export default class SwitchBoardCommand extends Command {
     });
 
     if (board === undefined) {
-
       return board;
     }
 
     // Check that board doesn't have an RP2040 on it
-    const data = readFileSync(boardFiles[board])
+    const data = readFileSync(boardFiles[board]);
 
     if (data.includes("rp2040")) {
-
       return [board, false];
     }
 
@@ -129,7 +134,6 @@ export default class SwitchBoardCommand extends Command {
     });
 
     if (useRiscV === undefined) {
-
       return undefined;
     }
 
@@ -144,6 +148,19 @@ export default class SwitchBoardCommand extends Command {
       workspaceFolder === undefined ||
       !existsSync(join(workspaceFolder.uri.fsPath, "CMakeLists.txt"))
     ) {
+      return;
+    }
+
+    // Check if Pico Zephyr project and execute switchBoardZephyr
+    if (
+      readFileSync(join(workspaceFolder.uri.fsPath, "CMakeLists.txt"))
+        .toString("utf-8")
+        .includes("pico_zephyr")
+    ) {
+      commands.executeCommand(
+        `${extensionName}.${SwitchZephyrBoardCommand.id}`
+      );
+
       return;
     }
 
@@ -205,22 +222,19 @@ export default class SwitchBoardCommand extends Command {
 
       const selectedToolchain = supportedToolchainVersions.find(
         t => t.version === chosenToolchainVersion
-      )
+      );
 
       if (selectedToolchain === undefined) {
-        void window.showErrorMessage(
-          "Error switching to Risc-V toolchain"
-        );
+        void window.showErrorMessage("Error switching to Risc-V toolchain");
 
         return;
       }
 
       await window.withProgress(
-          {
-            title:
-              `Installing toolchain ${selectedToolchain.version} `,
-            location: ProgressLocation.Notification,
-          },
+        {
+          title: `Installing toolchain ${selectedToolchain.version} `,
+          location: ProgressLocation.Notification,
+        },
         async progress => {
           if (await downloadAndInstallToolchain(selectedToolchain)) {
             progress.report({
@@ -253,7 +267,7 @@ export default class SwitchBoardCommand extends Command {
             }
           }
         }
-      )
+      );
     }
 
     const success = await cmakeUpdateBoard(workspaceFolder.uri, board);

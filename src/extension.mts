@@ -85,6 +85,7 @@ import SwitchBoardZephyrCommand from "./commands/switchBoardZephyr.mjs";
 import UninstallPicoSDKCommand from "./commands/uninstallPicoSDK.mjs";
 import UpdateOpenOCDCommand from "./commands/updateOpenOCD.mjs";
 import FlashProjectSWDCommand from "./commands/flashProjectSwd.mjs";
+import { findZephyrBoardInTasksJson } from "./commands/switchBoardZephyr.mjs";
 // eslint-disable-next-line max-len
 import { NewMicroPythonProjectPanel } from "./webview/newMicroPythonProjectPanel.mjs";
 import type { Progress as GotProgress } from "got";
@@ -114,7 +115,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     new NewProjectCommand(context.extensionUri),
     new SwitchSDKCommand(ui, context.extensionUri),
     new SwitchBoardCommand(ui, context.extensionUri),
-    new SwitchBoardZephyrCommand(),
+    new SwitchBoardZephyrCommand(ui),
     new LaunchTargetPathCommand(),
     new GetPythonPathCommand(),
     new GetEnvPathCommand(),
@@ -235,6 +236,30 @@ export async function activate(context: ExtensionContext): Promise<void> {
       ContextKeys.isPicoZephyrProject,
       true
     );
+
+    // Update the board info if it can be found in tasks.json
+    const tasksJsonFilePath = join(
+      workspaceFolder.uri.fsPath,
+      ".vscode",
+      "tasks.json"
+    );
+
+    // Update UI with board description
+    const board = findZephyrBoardInTasksJson(tasksJsonFilePath);
+
+    if (board !== undefined) {
+      if (board === "rpi_pico2/rp2350a/m33/w") {
+        ui.updateBoard("Pico 2W");
+      } else if (board === "rpi_pico2/rp2350a/m33") {
+        ui.updateBoard("Pico 2");
+      } else if (board === "rpi_pico/rp2040/w") {
+        ui.updateBoard("Pico W");
+      } else if (board.includes("rpi_pico")) {
+        ui.updateBoard("Pico");
+      } else {
+        ui.updateBoard("Other");
+      }
+    }
   }
   // check for pico_sdk_init() in CMakeLists.txt
   else if (
