@@ -22,6 +22,7 @@ import {
   downloadAndInstallNinja,
   downloadAndInstallOpenOCD,
   downloadAndInstallPicotool,
+  downloadFileGot,
 } from "../utils/download.mjs";
 import Settings, { SettingsKey, HOME_VAR } from "../settings.mjs";
 import which from "which";
@@ -548,6 +549,8 @@ export class SetupZephyrCommand extends CommandWithResult<string | undefined> {
       );
       if (!dtcResult) {
         window.showErrorMessage("Could not install DTC. Exiting Zephyr Setup");
+
+        return;
       }
       window.showInformationMessage("DTC installed.");
 
@@ -563,6 +566,8 @@ export class SetupZephyrCommand extends CommandWithResult<string | undefined> {
         window.showErrorMessage(
           "Could not install gperf. Exiting Zephyr Setup"
         );
+
+        return;
       }
       window.showInformationMessage("gperf installed.");
 
@@ -575,8 +580,36 @@ export class SetupZephyrCommand extends CommandWithResult<string | undefined> {
       );
       if (!wgetResult) {
         window.showErrorMessage("Could not install wget. Exiting Zephyr Setup");
+
+        return;
       }
       window.showInformationMessage("wget installed.");
+
+      this._logger.info("Installing 7zip");
+      const szipURL = new URL("https://7-zip.org/a/7z2409-x64.exe");
+      const szipResult = await downloadFileGot(
+        szipURL,
+        joinPosix(homedir().replaceAll("\\", "/"), ".pico-sdk", "7zip-x64.exe")
+      );
+
+      if (!szipResult) {
+        window.showErrorMessage("Could not install 7zip. Exiting Zephyr Setup");
+
+        return;
+      }
+
+      const szipCommand: string = "7zip-x64.msi";
+      const szipInstallResult = await this._runCommand(szipCommand, {
+        cwd: joinPosix(homedir().replaceAll("\\", "/"), ".pico-sdk"),
+      });
+
+      if (!szipInstallResult) {
+        window.showErrorMessage("Could not install 7zip. Exiting Zephyr Setup");
+
+        return;
+      }
+
+      window.showInformationMessage("7zip installed.");
     }
 
     const pythonExe = python3Path.replace(
@@ -585,11 +618,14 @@ export class SetupZephyrCommand extends CommandWithResult<string | undefined> {
     );
 
     const customEnv = process.env;
-    const customPath = await getPath();
-    this._logger.info(`Path: ${customPath}`);
-    if (!customPath) {
-      return;
-    }
+    // const customPath = await getPath();
+    // this._logger.info(`Path: ${customPath}`);
+    // if (!customPath) {
+    //   return;
+    // }
+
+    const customPath = ``;
+
     customPath.replaceAll("/", "\\");
     customEnv[isWindows ? "Path" : "PATH"] =
       customPath + customEnv[isWindows ? "Path" : "PATH"];
@@ -745,7 +781,6 @@ manifest:
     result = await this._runCommand(westInstallSDKCommand, {
       cwd: zephyrWorkspaceDirectory,
       windowsHide: true,
-      env: customEnv,
     });
 
     this._logger.info(`${result}`);

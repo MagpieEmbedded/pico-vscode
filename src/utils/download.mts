@@ -395,7 +395,7 @@ async function downloadFileUndici(
   });
 }
 
-async function downloadFileGot(
+export async function downloadFileGot(
   url: URL,
   archiveFilePath: string,
   extraHeaders?: { [key: string]: string },
