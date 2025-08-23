@@ -21,7 +21,6 @@ import Settings, { HOME_VAR } from "../settings.mjs";
 import { openOCDVersion } from "../webview/newProjectPanel.mjs";
 import findPython, { showPythonNotFoundError } from "../utils/pythonHelper.mjs";
 import { ensureGit } from "../utils/gitUtil.mjs";
-import { type VersionBundle } from "../utils/versionBundles.mjs";
 
 const _logger = new Logger("zephyrSetup");
 
@@ -48,7 +47,6 @@ manifest:
 `;
 
 interface ZephyrSetupValue {
-  versionBundle: VersionBundle | undefined;
   cmakeMode: number;
   cmakePath: string;
   cmakeVersion: string;
@@ -132,9 +130,6 @@ export async function setupZephyr(
       // Handle CMake install
       switch (data.cmakeMode) {
         case 0:
-          if (data.versionBundle !== undefined) {
-            data.cmakeVersion = data.versionBundle.cmake;
-          }
         // eslint-disable-next-line no-fallthrough
         case 2:
           installedSuccessfully = false;

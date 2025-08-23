@@ -28,9 +28,6 @@ import { PythonExtension } from "@vscode/python-extension";
 import { unknownErrorToString } from "../utils/errorHelper.mjs";
 import { buildZephyrWorkspacePath } from "../utils/download.mjs";
 import { setupZephyr, type ZephyrSetupOutputs } from "../utils/setupZephyr.mjs";
-import VersionBundlesLoader, {
-  type VersionBundle,
-} from "../utils/versionBundles.mjs";
 import { getCmakeReleases } from "../utils/githubREST.mjs";
 
 enum BoardType {
@@ -137,8 +134,6 @@ export class NewZephyrProjectPanel {
 
   private _projectRoot?: Uri;
   private _pythonExtensionApi?: PythonExtension;
-  private _versionBundlesLoader?: VersionBundlesLoader;
-  private _versionBundle: VersionBundle | undefined;
 
   // Create settings.json file with correct subsitution for tools such as
   // CMake, Ninja, Python, etc
@@ -339,23 +334,6 @@ export class NewZephyrProjectPanel {
               }
             }
             break;
-          case "versionBundleAvailableTest":
-            {
-              // test if versionBundle for sdk version is available
-              const versionBundle =
-                await this._versionBundlesLoader?.getModuleVersion(
-                  message.value as string
-                );
-              // return result in message of command versionBundleAvailableTest
-              await this._panel.webview.postMessage({
-                command: "versionBundleAvailableTest",
-                value: {
-                  result: versionBundle !== undefined,
-                  picotoolVersion: versionBundle?.picotool,
-                },
-              });
-            }
-            break;
           case "cancel":
             this.dispose();
             break;
@@ -495,24 +473,8 @@ export class NewZephyrProjectPanel {
       return;
     }
 
-    if (
-      this._versionBundle === undefined &&
-      // if no versionBundle then all version options the could be dependent on it must be custom (=> independent of versionBundle)
-      data.cmakeMode === 0
-      // (data.ninjaMode === 0 || data.cmakeMode === 0)
-    ) {
-      progress.report({
-        message: "Failed",
-        increment: 100,
-      });
-      void window.showErrorMessage("Failed to find selected SDK version.");
-
-      return;
-    }
-
     // Setup Zephyr before doing anything else
     const zephyrSetupOutputs = await setupZephyr({
-      versionBundle: this._versionBundle,
       cmakeMode: data.cmakeMode,
       cmakePath: data.cmakePath,
       cmakeVersion: data.cmakeVersion,
@@ -733,6 +695,8 @@ export class NewZephyrProjectPanel {
 
     let cmakesHtml = "";
     const cmakeReleases = await getCmakeReleases();
+    console.debug(cmakeReleases);
+    const latestCmakeRelease = cmakeReleases[0];
     cmakeReleases.forEach(cmake => {
       cmakesHtml += `<option ${
         cmakesHtml.length === 0 ? "selected " : ""
@@ -978,10 +942,10 @@ export class NewZephyrProjectPanel {
           <div class="col-span-2">
             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CMake Version:</label>
             ${
-              this._versionBundle !== undefined
+              latestCmakeRelease !== undefined
                 ? `<div class="flex items-center mb-2">
-                    <input type="radio" id="cmake-radio-default-version" name="cmake-version-radio" value="0" class="mr-1 text-blue-500 requires-version-bundle">
-                    <label for="cmake-radio-default-version" class="text-gray-900 dark:text-white">Default version</label>
+                    <input type="radio" id="cmake-radio-default-version" name="cmake-version-radio" value="0" class="mr-1 text-blue-500" checked="checked">
+                    <label id="cmake-radio-latest-version" name=${latestCmakeRelease} for="cmake-radio-default-version" class="text-gray-900 dark:text-white">Default version</label>
                   </div>`
                 : ""
             }

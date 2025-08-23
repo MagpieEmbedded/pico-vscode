@@ -206,7 +206,13 @@ var submitted = false;
 
       return;
     }
-    if (cmakeMode === 2) {
+
+    if (cmakeMode === 0) {
+      const cmakeLatestElement = document.getElementById(
+        "cmake-radio-latest-version"
+      );
+      cmakeVersion = cmakeLatestElement.getAttribute("name");
+    } else if (cmakeMode === 2) {
       cmakeVersion = document.getElementById("sel-cmake").value;
     } else if (cmakeMode == 3) {
       const files = document.getElementById("cmake-path-executable").files;
@@ -224,6 +230,10 @@ var submitted = false;
         return;
       }
     }
+
+    console.log(
+      `Cmake Mode: ${cmakeMode}, path: ${cmakePath}, version: ${cmakeVersion}`
+    );
 
     //post all data values to the extension
     vscode.postMessage({
