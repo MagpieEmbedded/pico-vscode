@@ -9,6 +9,7 @@ import type { Progress as GotProgress } from "got";
 
 import {
   buildCMakePath,
+  buildNinjaPath,
   buildZephyrWorkspacePath,
   downloadAndInstallArchive,
   downloadAndInstallCmake,
@@ -50,10 +51,14 @@ interface ZephyrSetupValue {
   cmakeMode: number;
   cmakePath: string;
   cmakeVersion: string;
+  ninjaMode: number;
+  ninjaPath: string;
+  ninjaVersion: string;
 }
 
 interface ZephyrSetupOutputs {
   cmakeExecutable: string;
+  ninjaExecutable: string;
 }
 
 function _runCommand(
@@ -89,7 +94,7 @@ export async function setupZephyr(
     return;
   }
 
-  let output: ZephyrSetupOutputs = { cmakeExecutable: "" };
+  let output: ZephyrSetupOutputs = { cmakeExecutable: "", ninjaExecutable: "" };
 
   let python3Path = "";
   let isWindows = false;
@@ -214,6 +219,89 @@ export async function setupZephyr(
 
           return;
       }
+
+      switch (data.ninjaMode) {
+        case 0:
+        // eslint-disable-next-line no-fallthrough
+        case 2:
+          installedSuccessfully = false;
+          prog2LastState = 0;
+          await window.withProgress(
+            {
+              location: ProgressLocation.Notification,
+              title: "Download and install Ninja",
+              cancellable: false,
+            },
+            async progress2 => {
+              if (
+                await downloadAndInstallNinja(
+                  data.ninjaVersion,
+                  (prog: GotProgress) => {
+                    const per = prog.percent * 100;
+                    progress2.report({
+                      increment: per - prog2LastState,
+                    });
+                    prog2LastState = per;
+                  }
+                )
+              ) {
+                progress2.report({
+                  message: "Successfully downloaded and installed Ninja.",
+                  increment: 100,
+                });
+
+                installedSuccessfully = true;
+              } else {
+                installedSuccessfully = false;
+                progress2.report({
+                  message: "Failed",
+                  increment: 100,
+                });
+              }
+            }
+          );
+
+          if (!installedSuccessfully) {
+            progress.report({
+              message: "Failed",
+              increment: 100,
+            });
+            void window.showErrorMessage(
+              "Failed to download and install ninja. \
+              Make sure all requirements are met."
+            );
+
+            return;
+          } else {
+            output.ninjaExecutable = joinPosix(
+              buildNinjaPath(data.ninjaVersion),
+              "ninja"
+            );
+          }
+          break;
+        case 1:
+          output.ninjaExecutable = "ninja";
+          break;
+        case 3:
+          // normalize path returned by the os selector to posix path for the settings json
+          // and cross platform compatibility
+          output.ninjaExecutable =
+            process.platform === "win32"
+              ? joinPosix(...data.ninjaPath.split("\\"))
+              : data.ninjaPath;
+          break;
+
+        default:
+          progress.report({
+            message: "Failed",
+            increment: 100,
+          });
+          void window.showErrorMessage("Unknown ninja selection.");
+
+          return;
+      }
+
+      // Handle ninja install
       await window.withProgress(
         {
           location: ProgressLocation.Notification,
@@ -528,15 +616,10 @@ export async function setupZephyr(
 
       const customPath = [
         dirname(output.cmakeExecutable.replaceAll("\\", "/")),
+        dirname(output.ninjaExecutable.replaceAll("\\", "/")),
         joinPosix(homedir().replaceAll("\\", "/"), ".pico-sdk", "dtc", "bin"),
         joinPosix(homedir().replaceAll("\\", "/"), ".pico-sdk", "git", "cmd"),
         joinPosix(homedir().replaceAll("\\", "/"), ".pico-sdk", "gperf", "bin"),
-        joinPosix(
-          homedir().replaceAll("\\", "/"),
-          ".pico-sdk",
-          "ninja",
-          "v1.12.1"
-        ),
         joinPosix(
           homedir().replaceAll("\\", "/"),
           ".pico-sdk",

@@ -173,6 +173,70 @@ var submitted = false;
       "shell-features-cblist"
     ).checked;
 
+    // Handle Ninja version
+    // selected ninja version
+    const ninjaVersionRadio = document.getElementsByName("ninja-version-radio");
+    let ninjaMode = null;
+    let ninjaPath = null;
+    let ninjaVersion = null;
+    for (let i = 0; i < ninjaVersionRadio.length; i++) {
+      if (ninjaVersionRadio[i].checked) {
+        ninjaMode = Number(ninjaVersionRadio[i].value);
+        break;
+      }
+    }
+    if (ninjaVersionRadio.length === 0) {
+      // default to ninja mode 1 == System version
+      ninjaMode = 1;
+    }
+
+    // if ninja version is null or not a number, smaller than 0 or bigger than 3, set it to 0
+    if (
+      ninjaMode === null ||
+      isNaN(ninjaMode) ||
+      ninjaMode < 0 ||
+      ninjaMode > 4
+    ) {
+      ninjaMode = 0;
+      console.debug("Invalid ninja version value: " + ninjaMode.toString());
+      vscode.postMessage({
+        command: CMD_ERROR,
+        value: "Please select a valid ninja version.",
+      });
+      submitted = false;
+
+      return;
+    }
+
+    if (ninjaMode === 0) {
+      const ninjaLatestElement = document.getElementById(
+        "ninja-radio-latest-version"
+      );
+      ninjaVersion = ninjaLatestElement.getAttribute("name");
+    } else if (ninjaMode === 2) {
+      ninjaVersion = document.getElementById("sel-ninja").value;
+    } else if (ninjaMode == 3) {
+      const files = document.getElementById("ninja-path-executable").files;
+
+      if (files.length === 1) {
+        ninjaPath = files[0].name;
+      } else {
+        console.debug("Please select a valid ninja executable file");
+        vscode.postMessage({
+          command: CMD_ERROR,
+          value: "Please select a valid ninja executable file.",
+        });
+        submitted = false;
+
+        return;
+      }
+    }
+
+    console.log(
+      `Ninja Mode: ${ninjaMode}, path: ${ninjaPath}, version: ${ninjaVersion}`
+    );
+
+    // Handle CMake Version
     const cmakeVersionRadio = document.getElementsByName("cmake-version-radio");
     let cmakeMode = null;
     let cmakePath = null;
@@ -253,6 +317,9 @@ var submitted = false;
         cmakeMode: Number(cmakeMode),
         cmakePath: cmakePath,
         cmakeVersion: cmakeVersion,
+        ninjaMode: Number(ninjaMode),
+        ninjaPath: ninjaPath,
+        ninjaVersion: ninjaVersion,
       },
     });
   };
